@@ -12,25 +12,22 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-  // const title = req.body.title;
-  // const imageUrl = req.body.imageUrl;
-  // const price = req.body.price;
-  // const description = req.body.description;
   const { title, imageUrl, price, description } = { ...req.body };
 
-  const product = new Product(
+  const product = new Product({
+    // map in model : products
     title,
     price,
     description,
     imageUrl,
-    null,
-    req.user._id
-  );
+    // null,
+    // req.user._id
+  });
 
   product
     .save()
     .then((result) => {
-      // console.log(result);
+      console.log("=========================>", result);
       console.log("Created Product");
       res.redirect("/admin/products");
     })
@@ -63,24 +60,19 @@ exports.getEditProduct = (req, res, next) => {
 };
 
 exports.postEditProduct = (req, res, next) => {
-  const {
-    productId: prodId,
-    title: updatedTitle,
-    price: updatedPrice,
-    imageUrl: updatedImageUrl,
-    description: updatedDesc,
-  } = { ...req.body };
-
-  const product = new Product(
-    updatedTitle,
-    updatedPrice,
-    updatedDesc,
-    updatedImageUrl,
-    new ObjectId(prodId)
-  );
-  Product.findById(prodId);
-  product
-    .save()
+  //const { productId, title, price, imageUrl, description } = { ...req.body };
+  Product.findOneAndUpdate(
+    {
+      _id: req.body.productId,
+    },
+    {
+      ...req.body,
+    },
+    {
+      new: true, // return updated doc
+      runValidators: true, // validate before update
+    }
+  )
     .then((result) => {
       console.log("UPDATED PRODUCT!");
       res.redirect("/admin/products");
@@ -89,7 +81,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
@@ -102,7 +94,9 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId)
+  Product.findOneAndRemove({
+    _id: prodId,
+  })
     .then((result) => {
       console.log("DESTROYED PRODUCT");
       res.redirect("/admin/products");
